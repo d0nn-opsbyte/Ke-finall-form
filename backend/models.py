@@ -85,3 +85,19 @@ class Review(db.Model):
     booking = db.relationship('Booking', backref='review')
     reviewer = db.relationship('User', foreign_keys=[reviewer_id], backref='reviews_given')
     reviewee = db.relationship('User', foreign_keys=[reviewee_id], backref='reviews_received')
+
+class Payment(db.Model):
+    __tablename__ = 'payments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    booking_id = db.Column(db.Integer, db.ForeignKey('bookings.id'), nullable=False)
+    amount = db.Column(db.Float, nullable=False)  
+    commission = db.Column(db.Float, nullable=False)  
+    seller_amount = db.Column(db.Float, nullable=False)  
+    mpesa_receipt = db.Column(db.String(50))  
+    phone_number = db.Column(db.String(20), nullable=False)  
+    status = db.Column(db.String(20), default='pending')  
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    booking = db.relationship('Booking', backref='payment')
+

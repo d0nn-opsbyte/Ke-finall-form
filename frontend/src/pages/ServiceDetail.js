@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import PaymentModel from '../components/payment/PaymentModel';
 
 const ServiceDetail = () => {
   const { id } = useParams();
@@ -15,6 +16,8 @@ const ServiceDetail = () => {
     location_address: '',
     special_requests: ''
   });
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [recentBooking, setRecentBooking] = useState(null);
 
   const fetchServiceDetails = useCallback(async () => {
     try {
@@ -36,7 +39,7 @@ const ServiceDetail = () => {
     fetchServiceDetails();
   }, [fetchServiceDetails]);
 
-  const handleBookingSubmit = async (e) => {
+  const handleBookingAndPay = async (e) => {
     e.preventDefault();
     if (!user) {
       alert('Please login to book a service');
@@ -50,8 +53,18 @@ const ServiceDetail = () => {
         ...bookingData
       };
       
-      await apiService.createBooking(bookingPayload);
-      alert('Booking request sent successfully!');
+      const response = await apiService.createBooking(bookingPayload);
+      const newBooking = response.data;
+      
+      // Store the booking and show payment modal
+      setRecentBooking({
+        id: newBooking.booking_id,
+        service_title: newBooking.service_title,
+        total_price: newBooking.total_price
+      });
+      setShowPaymentModal(true);
+      
+      // Reset form
       setBookingData({
         booking_date: '',
         duration: 1,
@@ -90,7 +103,7 @@ const ServiceDetail = () => {
 
             <div className="service-details">
               <div className="detail-item">
-                <strong>Price:</strong> Ksh{service.price} / {service.price_type}
+                <strong>Price:</strong> KSh {service.price} / {service.price_type}
               </div>
               <div className="detail-item">
                 <strong>Availability:</strong> {service.availability_days || 'Mon-Fri'}
@@ -157,7 +170,7 @@ const ServiceDetail = () => {
                   </Link>
                 </div>
               ) : (
-                <form onSubmit={handleBookingSubmit}>
+                <form onSubmit={handleBookingAndPay}>
                   <div className="form-group">
                     <label>Booking Date</label>
                     <input
@@ -215,12 +228,15 @@ const ServiceDetail = () => {
                   <div className="booking-summary">
                     <div className="price-calculation">
                       <span>Total: </span>
-                      <strong>Ksh{(service.price * bookingData.duration).toFixed(2)}</strong>
+                      <strong>KSh {(service.price * bookingData.duration).toFixed(2)}</strong>
+                    </div>
+                    <div className="commission-breakdown">
+                      <small>Includes 10% platform fee: KSh {(service.price * bookingData.duration * 0.10).toFixed(2)}</small>
                     </div>
                   </div>
 
                   <button type="submit" className="btn btn-primary btn-book">
-                    Request Booking
+                    Book & Pay Now
                   </button>
                 </form>
               )}
@@ -228,6 +244,18 @@ const ServiceDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      {showPaymentModal && recentBooking && (
+        <PaymentModel
+          booking={recentBooking}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={() => {
+            setShowPaymentModal(false);
+            alert('Payment completed! Your booking is confirmed.');
+          }}
+        />
+      )}
     </div>
   );
 };

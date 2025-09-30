@@ -29,6 +29,10 @@ export const apiService = {
   getUserBookings: (userId) => api.get(`/bookings/user/${userId}`),
   updateBookingStatus: (bookingId, status) => 
     api.put(`/bookings/${bookingId}/status`, { status }),
+  completeBooking: (bookingId) => 
+    api.post('/bookings/complete', { booking_id: bookingId }),
+  getCompletedUnpaidBookings: (userId) => 
+    api.get(`/users/${userId}/completed-unpaid`),
 
   // Reviews
   createReview: (reviewData) => api.post('/reviews', reviewData),
@@ -37,6 +41,12 @@ export const apiService = {
 
   // Categories & Search
   getCategories: () => api.get('/categories'),
+
+  // Payment methods
+  initiatePayment: (paymentData) => api.post('/payments/initiate', paymentData),
+  confirmPayment: (confirmationData) => api.post('/payments/confirm', confirmationData),
+  getPayment: (paymentId) => api.get(`/payments/${paymentId}`),
+  getProviderEarnings: (providerId) => api.get(`/providers/${providerId}/earnings`),
 };
 
 export default api;

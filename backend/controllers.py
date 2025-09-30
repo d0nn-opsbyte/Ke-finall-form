@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from extensions import db  # Import from extensions
-from models import User, Service, Booking, Review
+from models import Payment, User, Service, Booking, Review
 from sqlalchemy import or_, and_
 from datetime import datetime
 
@@ -355,6 +355,145 @@ def get_provider_bookings(provider_id):
             'status': booking.status,
             'buyer_name': booking.buyer.name,
             'buyer_phone': booking.buyer.phone
+        })
+
+
+def initiate_payment():
+    data = request.get_json()
+    booking_id = data['booking_id']
+    phone_number = data['phone_number']
+    
+    booking = Booking.query.get_or_404(booking_id)
+    
+    
+    total_amount = booking.total_price
+    commission = total_amount * 0.10  
+    seller_amount = total_amount - commission
+    
+    
+    payment = Payment(
+        booking_id=booking_id,
+        amount=total_amount,
+        commission=commission,
+        seller_amount=seller_amount,
+        phone_number=phone_number,
+        status='pending'
+    )
+    
+    db.session.add(payment)
+    db.session.commit()
+
+   
+    payment.status = 'completed'
+    payment.mpesa_receipt = 'SIM001'  # 
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Payment initiated successfully',
+        'payment_id': payment.id,
+        'amount': total_amount,
+        'commission': commission,
+        'seller_amount': seller_amount,
+        'mpesa_prompt': f"You will receive an M-Pesa prompt to pay KSh {total_amount}"
+    }), 201
+
+def confirm_payment():
+    data = request.get_json()
+    payment_id = data['payment_id']
+    mpesa_receipt = data.get('mpesa_receipt', 'SIM001')  
+    
+    payment = Payment.query.get_or_404(payment_id)
+    booking = payment.booking
+    
+    
+    payment.status = 'completed'
+    payment.mpesa_receipt = mpesa_receipt
+    
+    
+    booking.payment_status = 'paid'
+    
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Payment confirmed successfully',
+        'payment_id': payment.id,
+        'seller_amount': payment.seller_amount,
+        'commission': payment.commission,
+        'mpesa_receipt': mpesa_receipt
+    })
+
+def get_payment_details(payment_id):
+    payment = Payment.query.get_or_404(payment_id)
+    
+    return jsonify({
+        'id': payment.id,
+        'amount': payment.amount,
+        'commission': payment.commission,
+        'seller_amount': payment.seller_amount,
+        'status': payment.status,
+        'mpesa_receipt': payment.mpesa_receipt,
+        'booking_id': payment.booking_id,
+        'service_title': payment.booking.service.title
+    })
+
+def get_provider_earnings(provider_id):
+    
+    payments = Payment.query.join(Booking).join(Service).filter(
+        Service.provider_id == provider_id,
+        Payment.status == 'completed'
+    ).all()
+    
+    total_earnings = sum(p.seller_amount for p in payments)
+    total_commission = sum(p.commission for p in payments)
+    recent_payments = [{
+        'id': p.id,
+        'amount': p.seller_amount,
+        'service_title': p.booking.service.title,
+        'date': p.created_at.isoformat(),
+        'mpesa_receipt': p.mpesa_receipt
+    } for p in payments[:5]]
+    
+    return jsonify({
+        'total_earnings': total_earnings,
+        'total_commission': total_commission,
+        'recent_payments': recent_payments,
+        'payment_count': len(payments)
+    })
+
+def complete_booking():
+    data = request.get_json()
+    booking_id = data['booking_id']
+    
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # Update booking status to completed
+    booking.status = 'completed'
+    
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Booking marked as completed',
+        'booking_id': booking.id,
+        'total_amount': booking.total_price
+    })
+
+def get_completed_unpaid_bookings(user_id):
+    # Get bookings that are completed but not paid
+    bookings = Booking.query.filter(
+        Booking.buyer_id == user_id,
+        Booking.status == 'completed',
+        Booking.payment_status == 'unpaid'
+    ).all()
+    
+    result = []
+    for booking in bookings:
+        result.append({
+            'id': booking.id,
+            'service_title': booking.service.title,
+            'booking_date': booking.booking_date.isoformat(),
+            'total_price': booking.total_price,
+            'provider_name': booking.provider_rel.name
         })
     
     return jsonify(result)

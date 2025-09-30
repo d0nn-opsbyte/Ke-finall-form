@@ -8,6 +8,8 @@ import Register from './pages/Register';
 import Services from './pages/Services';
 import ServiceDetail from './pages/ServiceDetail';
 import Bookings from './pages/Bookings';
+import ProviderDashboard from './pages/ProviderDashboard';
+import CompletedBookings from './pages/CompletedBookings';
 import './App.css';
 
 function App() {
@@ -24,6 +26,8 @@ function App() {
               <Route path="/services" element={<Services />} />
               <Route path="/services/:id" element={<ServiceDetail />} />
               <Route path="/bookings" element={<Bookings />} />
+              <Route path="/provider/dashboard" element={<ProviderDashboard />} />
+              <Route path="/completed-bookings" element={<CompletedBookings />} />
               <Route path="*" element={<h2>Page Not Found</h2>} />
             </Routes>
           </main>

@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import app, jsonify, request
 from controllers import *
 
 def register_routes(app):
@@ -82,3 +82,29 @@ def register_routes(app):
     @app.route('/api/provider/<int:provider_id>/bookings', methods=['GET'])
     def provider_bookings_route(provider_id):
         return get_provider_bookings(provider_id)
+    
+    # Payment routes
+    @app.route('/api/payments/initiate', methods=['POST'])
+    def initiate_payment_route():
+        return initiate_payment()
+
+    @app.route('/api/payments/confirm', methods=['POST'])
+    def confirm_payment_route():
+        return confirm_payment()
+
+    @app.route('/api/payments/<int:payment_id>', methods=['GET'])
+    def get_payment_route(payment_id):
+        return get_payment_details(payment_id)
+
+    @app.route('/api/providers/<int:provider_id>/earnings', methods=['GET'])
+    def get_provider_earnings_route(provider_id):
+        return get_provider_earnings(provider_id)
+    
+    # Add these routes
+    @app.route('/api/bookings/complete', methods=['POST'])
+    def complete_booking_route():
+        return complete_booking()
+
+    @app.route('/api/users/<int:user_id>/completed-unpaid', methods=['GET'])
+    def get_completed_unpaid_bookings_route(user_id):
+        return get_completed_unpaid_bookings(user_id)

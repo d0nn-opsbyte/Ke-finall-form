@@ -41,43 +41,42 @@ const Bookings = () => {
   });
 
   const getStatusBadge = (status) => {
-    const statusColors = {
-      pending: 'booking-status-pending',
-      confirmed: 'booking-status-confirmed',
-      'in-progress': 'booking-status-in-progress',
-      completed: 'booking-status-completed',
-      cancelled: 'booking-status-cancelled'
-    };
-
     return (
-      <span className={`booking-status-badge ${statusColors[status] || 'booking-status-default'}`}>
+      <span>
         {status.replace('-', ' ')}
+      </span>
+    );
+  };
+
+  const getPaymentBadge = (paymentStatus) => {
+    return (
+      <span>
+        {paymentStatus}
       </span>
     );
   };
 
   if (loading) {
     return (
-      <div className="bookings-container">
-        <div className="loading">Loading your bookings...</div>
+      <div>
+        <div>Loading your bookings...</div>
       </div>
     );
   }
 
   return (
-    <div className="bookings-container">
-      <div className="page-header">
+    <div>
+      <div>
         <h1>My Bookings</h1>
         <p>Manage your service appointments and requests</p>
       </div>
 
       {/* Status Tabs */}
-      <div className="bookings-tabs">
-        <div className="tabs-container">
+      <div>
+        <div>
           {['all', 'pending', 'confirmed', 'in-progress', 'completed'].map(tab => (
             <button
               key={tab}
-              className={`tab-button ${activeTab === tab ? 'tab-active' : 'tab-inactive'}`}
               onClick={() => setActiveTab(tab)}
             >
               {tab.replace('-', ' ').toUpperCase()} ({tab === 'all' ? bookings.length : bookings.filter(b => b.status === tab).length})
@@ -88,7 +87,7 @@ const Bookings = () => {
 
       {/* Bookings List */}
       {filteredBookings.length === 0 ? (
-        <div className="no-bookings">
+        <div>
           <h3>
             {activeTab === 'all' ? 'No bookings yet' : `No ${activeTab} bookings`}
           </h3>
@@ -99,21 +98,21 @@ const Bookings = () => {
             }
           </p>
           {activeTab === 'all' && (
-            <a href="/services" className="btn btn-primary">
+            <a href="/services">
               Browse Services
             </a>
           )}
         </div>
       ) : (
-        <div className="bookings-grid">
+        <div>
           {filteredBookings.map(booking => (
-            <div key={booking.id} className="booking-card">
-              <div className="booking-header">
+            <div key={booking.id}>
+              <div>
                 <div>
-                  <h3 className="booking-title">
+                  <h3>
                     {booking.service_title}
                   </h3>
-                  <p className="booking-date">
+                  <p>
                     {new Date(booking.booking_date).toLocaleDateString('en-KE', {
                       weekday: 'long',
                       year: 'numeric',
@@ -124,28 +123,29 @@ const Bookings = () => {
                     })}
                   </p>
                 </div>
-                <div className="booking-meta">
+                <div>
                   {getStatusBadge(booking.status)}
-                  <p className="booking-price">
+                  {getPaymentBadge(booking.payment_status || 'unpaid')}
+                  <p>
                     KSh {booking.total_price}
                   </p>
                 </div>
               </div>
 
-              <div className="booking-details">
-                <div className="booking-info">
-                  <p className="booking-text">
+              <div>
+                <div>
+                  <p>
                     <strong>Provider:</strong> {booking.provider_name}
                   </p>
-                  <p className="booking-text">
+                  <p>
                     <strong>Customer:</strong> {booking.buyer_name}
                   </p>
                 </div>
-                <div className="booking-info">
-                  <p className="booking-text">
+                <div>
+                  <p>
                     <strong>Booking ID:</strong> #{booking.id}
                   </p>
-                  <p className="booking-text">
+                  <p>
                     <strong>Status:</strong> {booking.status}
                   </p>
                 </div>
@@ -153,16 +153,14 @@ const Bookings = () => {
 
               {/* Action Buttons for Providers */}
               {user.role === 'provider' && booking.status === 'pending' && (
-                <div className="booking-actions">
+                <div>
                   <button
                     onClick={() => updateBookingStatus(booking.id, 'confirmed')}
-                    className="btn btn-primary btn-sm"
                   >
                     Confirm Booking
                   </button>
                   <button
                     onClick={() => updateBookingStatus(booking.id, 'cancelled')}
-                    className="btn btn-secondary btn-sm"
                   >
                     Decline
                   </button>
@@ -171,10 +169,9 @@ const Bookings = () => {
 
               {/* Action Buttons for Ongoing Bookings */}
               {user.role === 'provider' && booking.status === 'confirmed' && (
-                <div className="booking-actions">
+                <div>
                   <button
                     onClick={() => updateBookingStatus(booking.id, 'in-progress')}
-                    className="btn btn-primary btn-sm"
                   >
                     Start Service
                   </button>
@@ -182,10 +179,9 @@ const Bookings = () => {
               )}
 
               {user.role === 'provider' && booking.status === 'in-progress' && (
-                <div className="booking-actions">
+                <div>
                   <button
                     onClick={() => updateBookingStatus(booking.id, 'completed')}
-                    className="btn btn-primary btn-sm"
                   >
                     Mark Complete
                   </button>
@@ -193,11 +189,10 @@ const Bookings = () => {
               )}
 
               {/* Cancel Button for Buyers */}
-              {user.role === 'buyer' && ['pending', 'confirmed'].includes(booking.status) && (
-                <div className="booking-actions">
+              {user.role === 'buyer' && ['pending', 'confirmed'].includes(booking.status) && booking.payment_status === 'unpaid' && (
+                <div>
                   <button
                     onClick={() => updateBookingStatus(booking.id, 'cancelled')}
-                    className="btn btn-secondary btn-sm"
                   >
                     Cancel Booking
                   </button>

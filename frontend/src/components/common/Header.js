@@ -29,6 +29,11 @@ const Header = () => {
                   Dashboard
                 </Link>
               )}
+
+                <Link to="/completed-bookings" className="nav-link">
+                 Pay for Services
+                </Link>
+
               <Link to="/bookings" className="nav-link">My Bookings</Link>
               <span className="user-name">Hello, {user.name}</span>
               <button onClick={handleLogout} className="logout-btn">
@@ -42,6 +47,8 @@ const Header = () => {
                 Sign Up
               </Link>
             </div>
+
+
           )}
         </nav>
       </div>
