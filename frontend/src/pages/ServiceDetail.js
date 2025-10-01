@@ -236,7 +236,7 @@ const ServiceDetail = () => {
                   </div>
 
                   <button type="submit" className="btn btn-primary btn-book">
-                    Book & Pay Now
+                    Book 
                   </button>
                 </form>
               )}
@@ -245,17 +245,7 @@ const ServiceDetail = () => {
         </div>
       </div>
 
-      {/* Payment Modal */}
-      {showPaymentModal && recentBooking && (
-        <PaymentModel
-          booking={recentBooking}
-          onClose={() => setShowPaymentModal(false)}
-          onSuccess={() => {
-            setShowPaymentModal(false);
-            alert('Payment completed! Your booking is confirmed.');
-          }}
-        />
-      )}
+      
     </div>
   );
 };
